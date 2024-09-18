@@ -7,12 +7,15 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // Setup logger
   app.useLogger(app.get(Logger));
+  // this setup ensures that incoming data is validated, and any unexpected properties are removed before passing the data to your route handlers.
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
+      whitelist: true, //strips out any properties from the request body that are not explicitly defined in your DTO
     }),
   );
+  // Use for parse cookie
   app.use(cookieParser());
   await app.listen(app.get(ConfigService).getOrThrow('PORT'));
 }
