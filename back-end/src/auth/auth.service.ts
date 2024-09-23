@@ -40,8 +40,8 @@ export class AuthService {
     };
     const token = this.jwtService.sign(tokenPayload);
     res.cookie('Authentication', token, {
-      secure: true,
-      // secure: false, // temporary set to false due to thunder client behavior
+      // secure: true,
+      secure: false, // temporary set to false due to thunder client behavior
       httpOnly: true,
       expires: expires,
     });
