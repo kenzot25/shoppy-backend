@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductRequest } from './dto/create-product.request';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { PRODUCT_IMAGES } from './product-image';
 
 @Injectable()
 export class ProductsService {
@@ -14,6 +15,21 @@ export class ProductsService {
         userId: id,
       },
     });
+  }
+
+  async getProduct(productId: number) {
+    try {
+      return {
+        ...(await this.prismaService.product.findUniqueOrThrow({
+          where: {
+            id: productId,
+          },
+        })),
+        imageExits: await this.imageExits(productId),
+      };
+    } catch (err) {
+      throw new NotFoundException(`Product not found with id ${productId}`);
+    }
   }
 
   async getProducts() {
@@ -31,7 +47,7 @@ export class ProductsService {
   private async imageExits(productId: number) {
     try {
       await fs.access(
-        join(__dirname, '../../', `public/products/${productId}.png`),
+        join(`${PRODUCT_IMAGES}/${productId}.png`),
         fs.constants.F_OK,
       );
       return true;
