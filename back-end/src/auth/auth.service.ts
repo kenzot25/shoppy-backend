@@ -47,4 +47,8 @@ export class AuthService {
     });
     return { tokenPayload };
   }
+
+  verifyToken(jwt: string) {
+    this.jwtService.verify(jwt);
+  }
 }

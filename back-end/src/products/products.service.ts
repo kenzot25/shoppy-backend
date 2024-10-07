@@ -5,17 +5,23 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { PRODUCT_IMAGES } from './product-image';
 import { Prisma } from '@prisma/client';
+import { ProductsGateway } from './products.gateway';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly productGateway: ProductsGateway,
+  ) {}
   async createProduct(data: CreateProductRequest, id: number) {
-    return this.prismaService.product.create({
+    const product = await this.prismaService.product.create({
       data: {
         ...data,
         userId: id,
       },
     });
+    this.productGateway.handleProductUpdated();
+    return product;
   }
 
   async getProduct(productId: number) {
@@ -33,8 +39,14 @@ export class ProductsService {
     }
   }
 
-  async getProducts() {
-    const products = await this.prismaService.product.findMany();
+  async getProducts(status: string) {
+    const args: Prisma.ProductFindManyArgs = {};
+    if (status === 'available') {
+      args.where = {
+        sold: false,
+      };
+    }
+    const products = await this.prismaService.product.findMany(args);
     return Promise.all(
       products.map(async (product) => {
         return {
@@ -65,6 +77,7 @@ export class ProductsService {
         },
         data,
       });
+      this.productGateway.handleProductUpdated();
     } catch (err) {
       throw new NotFoundException(`Product not found with id ${productId}`);
     }

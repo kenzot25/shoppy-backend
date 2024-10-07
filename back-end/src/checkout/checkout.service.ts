@@ -45,7 +45,6 @@ export class CheckoutService {
       event.data.object.id,
     );
     const productId = session.metadata.productId;
-
     await this.productService.update(+productId, {
       sold: true,
     });
